@@ -17,3 +17,4 @@ When ChatGPT-4 generates code, it often forgets the `import` statement that is n
         end function funk
     end interface`
 ```
+It can produce code with `implicit none` and undeclared variables that does not compile.
