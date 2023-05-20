@@ -5,23 +5,27 @@ program xminimize
     use bfgs_min_mod, only: bfgs_min
     use gradient_descent_min_mod, only : gradient_descent_min, dp
     use luus_jaakola_min_mod, only: luus_jaakola_min
+    use simulated_annealing_mod, only: simulated_annealing
+    use hooke_jeeves_mod, only: hooke_jeeves
     implicit none
-    integer, parameter :: iter_max = 10000, ndim=100, ipow_step_max=3
+    integer, parameter :: iter_max = 10**6, ndim=10, ipow_step_max=3, ifunk_try(*) = [3]
     real(kind=dp), dimension(ndim) :: xx, grad, min_point, true_min_point
     real(kind=dp) :: min_value, step_size, r, alpha, tinit, tfinal, t1, t2, tol_bfgs, & 
                      tol_cg, tol_nm, true_min_value
     real(kind=dp), parameter :: xh = 1.0d-6, funk_scale = 1.0d0, pi = 3.141592653589793238462643_dp
-    integer :: ipow_step, niter, nfunc_eval, niter_lj, ifunk
+    integer :: ipow_step, niter, nfunc_eval, niter_lj, ifunk, jfunk, nfunk_try
     logical, parameter :: do_lj = .false., do_bfgs = .true., do_cg = .true., &
                           do_nm = .true., do_adam = .true., do_mo = .true., &
-                          do_rmsprop = .true., do_adagrad = .true., &
-                          do_adadelta = .true., print_true = .true.
+                          do_rmsprop = .true., do_adagrad = .true., do_hj = .true., &
+                          do_adadelta = .true., do_simann = .true., print_true = .true.
     character (len=20), parameter :: func_names(*) = [character(len=20) :: "quadratic", "Rosenbrock", & ! 1:2
    "Styblinski-Tang", "Ackley", "Rastrigin", "Sphere", "Booth", "Beale", "Three-hump camel", &
    "Easom", "Goldstein-Price", "Levy"]
     call cpu_time(tinit)
-    ifunk = 2
-    print "(a)", "function: " // trim(func_names(ifunk))
+    nfunk_try = size(ifunk_try)
+do_ifunk: do jfunk=1, nfunk_try
+    ifunk = ifunk_try(jfunk)
+    print "(/,a)", "function: " // trim(func_names(ifunk))
     print "('#dimensions = ',i0, /)", ndim
     if (do_lj) then
        xx = 0.0_dp
@@ -35,6 +39,34 @@ program xminimize
        print *, "Minimum point: ", min_point
        print *, "Minimum value: ", min_value
        print *, "time elapsed: ", t2-t1
+    end if
+    if (do_hj) then
+       xx = 0.0_dp
+       block
+       real(kind=dp), parameter :: epsilon = 1.0d-8
+       real(kind=dp) :: step
+       call cpu_time(t1)
+       step = 0.0001_dp
+       call hooke_jeeves(funk, xx, step, epsilon, iter_max, min_point, min_value)
+       call cpu_time(t2)
+       print "(/,a)", "Hooke-Jeeves method"
+       print *, "Minimum point: ", min_point
+       print *, "Minimum value: ", min_value
+       print *, "time elapsed: ", t2-t1          
+       end block
+    end if
+    if (do_simann) then
+       xx = 0.0_dp
+       block
+       real(kind=dp), parameter :: alpha = 0.9_dp, T0 = 1.0_dp, T_min = 1.0d-3
+       call cpu_time(t1)
+       call simulated_annealing(funk, xx, T0, T_min, alpha, iter_max, min_point, min_value)
+       call cpu_time(t2)
+       print "(/,a)", "simulated annealing"
+       print *, "Minimum point: ", min_point
+       print *, "Minimum value: ", min_value
+       print *, "time elapsed: ", t2-t1          
+       end block
     end if
     if (do_adam) then
        xx = 0.0_dp
@@ -161,7 +193,8 @@ program xminimize
        print *, "Minimum value: ", true_min_value
     end if
     call cpu_time(tfinal)
-    print "(/,a,f10.4)", "time elapsed (s): ", tfinal-tinit
+end do do_ifunk
+print "(/,a,f10.4)", "time elapsed (s): ", tfinal-tinit
 
 contains
 
