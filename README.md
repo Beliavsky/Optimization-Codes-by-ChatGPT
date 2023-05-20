@@ -1,5 +1,5 @@
 # Optimization Codes by ChatGPT
-The prompts given to ChatGPT-4 are shown in the codes. Sometimes cleanup was required.
+The prompts given to ChatGPT-4 are shown in the codes. Sometimes cleanup was required. This is an experiment in code generation by ChatGPT -- the codes should not be relied upon.
 
 Compile with 
 
