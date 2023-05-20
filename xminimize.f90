@@ -1,25 +1,28 @@
 program xminimize
-    use adam_mod, only: adam_min
+    use adam_mod, only: adam_min, momentum_optimizer, rmsprop, adagrad, adadelta
     use nelder_mead_mod, only: nelder_mead
     use conjugate_gradient_min_mod, only: cg_min
     use bfgs_min_mod, only: bfgs_min
     use gradient_descent_min_mod, only : gradient_descent_min, dp
     use luus_jaakola_min_mod, only: luus_jaakola_min
     implicit none
-    integer, parameter :: iter_max = 10000, ndim=10
+    integer, parameter :: iter_max = 10000, ndim=100, ipow_step_max=3
     real(kind=dp), dimension(ndim) :: xx, grad, min_point, true_min_point
     real(kind=dp) :: min_value, step_size, r, alpha, tinit, tfinal, t1, t2, tol_bfgs, & 
                      tol_cg, tol_nm, true_min_value
     real(kind=dp), parameter :: xh = 1.0d-6, funk_scale = 1.0d0, pi = 3.141592653589793238462643_dp
     integer :: ipow_step, niter, nfunc_eval, niter_lj, ifunk
     logical, parameter :: do_lj = .false., do_bfgs = .true., do_cg = .true., &
-                          do_nm = .true., do_adam = .true., print_true = .true.
+                          do_nm = .true., do_adam = .true., do_mo = .true., &
+                          do_rmsprop = .true., do_adagrad = .true., &
+                          do_adadelta = .true., print_true = .true.
     character (len=20), parameter :: func_names(*) = [character(len=20) :: "quadratic", "Rosenbrock", & ! 1:2
    "Styblinski-Tang", "Ackley", "Rastrigin", "Sphere", "Booth", "Beale", "Three-hump camel", &
    "Easom", "Goldstein-Price", "Levy"]
     call cpu_time(tinit)
     ifunk = 2
-    print "(a,/)", "function: " // trim(func_names(ifunk))
+    print "(a)", "function: " // trim(func_names(ifunk))
+    print "('#dimensions = ',i0, /)", ndim
     if (do_lj) then
        xx = 0.0_dp
        r = 1.0_dp
@@ -42,6 +45,58 @@ program xminimize
        call adam_min(funk, xx, alpha, beta1, beta2, epsilon, iter_max, min_point, min_value)
        call cpu_time(t2)
        print "(/,a)", "Adam method"
+       print *, "Minimum point: ", min_point
+       print *, "Minimum value: ", min_value
+       print *, "time elapsed: ", t2-t1          
+       end block
+    end if
+    if (do_mo) then
+       xx = 0.0_dp
+       block
+       real(kind=dp), parameter :: alpha = 0.01_dp, beta = 0.9_dp
+       print "(/,a)", "Momentum Optimization method"
+       call cpu_time(t1)
+       call momentum_optimizer(funk, xx, alpha, beta, iter_max, min_point, min_value)
+       call cpu_time(t2)
+       print *, "Minimum point: ", min_point
+       print *, "Minimum value: ", min_value
+       print *, "time elapsed: ", t2-t1          
+       end block
+    end if
+    if (do_rmsprop) then
+       xx = 0.0_dp
+       block
+       real(kind=dp), parameter :: alpha = 0.001_dp, beta = 0.9_dp, epsilon = 1.0d-8
+       print "(/,a)", "RMSProp method"
+       call cpu_time(t1)
+       call rmsprop(funk, xx, alpha, beta, epsilon, iter_max, min_point, min_value)
+       call cpu_time(t2)
+       print *, "Minimum point: ", min_point
+       print *, "Minimum value: ", min_value
+       print *, "time elapsed: ", t2-t1          
+       end block
+    end if
+    if (do_adagrad) then
+       xx = 0.0_dp
+       block
+       real(kind=dp), parameter :: alpha = 0.01_dp, epsilon = 1.0d-8
+       print "(/,a)", "Adagrad method"
+       call cpu_time(t1)
+       call adagrad(funk, xx, alpha, epsilon, iter_max, min_point, min_value)
+       call cpu_time(t2)
+       print *, "Minimum point: ", min_point
+       print *, "Minimum value: ", min_value
+       print *, "time elapsed: ", t2-t1          
+       end block
+    end if
+    if (do_adadelta) then
+       xx = 0.0_dp
+       block
+       real(kind=dp), parameter :: rho = 0.95_dp, epsilon = 1.0d-6
+       print "(/,a)", "Adadelta method"
+       call cpu_time(t1)
+       call adadelta(funk, xx, rho, epsilon, iter_max, min_point, min_value)
+       call cpu_time(t2)
        print *, "Minimum point: ", min_point
        print *, "Minimum value: ", min_value
        print *, "time elapsed: ", t2-t1          
@@ -81,7 +136,7 @@ program xminimize
        print *, "time elapsed: ", t2-t1
     end if
     print "(/,a)", "steepest descent"
-    do ipow_step=0, 3
+    do ipow_step=0, ipow_step_max
        ! Set initial guess and convergence parameter
        step_size = 10.0**(-ipow_step)
        xx = 0.0_dp
