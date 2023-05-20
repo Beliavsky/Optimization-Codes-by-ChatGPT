@@ -7,6 +7,8 @@ Compile with
 
 Works with gfortran 12.0.1 20220213 and ifort version 2021.6.0.
 
+## Some ChatGPT-4 quirks
+
 When ChatGPT-4 generates code, it often forgets the `import` statement that is needed in the interface below.
 ```
     interface
@@ -25,3 +27,4 @@ ChatGPT-4 sometimes forgets that the `random_number()` intrinsic is a subroutine
 ```
 x = random_number()
 ```
+ChatGPT-4 sometimes declares as `intent(in)` an argument that needs to be `intent(in out)`, since its initial value in changed in the procedure.
