@@ -18,3 +18,5 @@ When ChatGPT-4 generates code, it often forgets the `import` statement that is n
     end interface`
 ```
 It can produce code with `implicit none` and undeclared variables that does not compile. It tends to declare a variable `i` as integer even in a procedure that does not use the variable `i`.
+
+When ChatGPT-4 translated some algorithms from the literature with `g*g'` or equivalently `g*transpose(g)`, it erroneously translated this to `g**2` in Fortran instead of `sum(g**2)`.
