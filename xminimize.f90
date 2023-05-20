@@ -1,4 +1,5 @@
 program xminimize
+    ! try various optimization methods on a battery of test functions
     use adam_mod, only: adam_min, momentum_optimizer, rmsprop, adagrad, adadelta
     use nelder_mead_mod, only: nelder_mead
     use conjugate_gradient_min_mod, only: cg_min
@@ -8,13 +9,15 @@ program xminimize
     use simulated_annealing_mod, only: simulated_annealing
     use hooke_jeeves_mod, only: hooke_jeeves
     implicit none
-    integer, parameter :: iter_max = 10**6, ndim=10, ipow_step_max=3, ifunk_try(*) = [3]
+    integer, parameter :: iter_max = 10**6, ndim=10, ipow_step_max=3, &
+       ifunk_try(*) = [1, 2, 3, 4] ! determines which functions to optimize
     real(kind=dp), dimension(ndim) :: xx, grad, min_point, true_min_point
     real(kind=dp) :: min_value, step_size, r, alpha, tinit, tfinal, t1, t2, tol_bfgs, & 
                      tol_cg, tol_nm, true_min_value
     real(kind=dp), parameter :: xh = 1.0d-6, funk_scale = 1.0d0, pi = 3.141592653589793238462643_dp
     integer :: ipow_step, niter, nfunc_eval, niter_lj, ifunk, jfunk, nfunk_try
-    logical, parameter :: do_lj = .false., do_bfgs = .true., do_cg = .true., &
+!   set constants that determine which optimization methods will be tried
+    logical, parameter :: do_lj = .true., do_bfgs = .true., do_cg = .true., &
                           do_nm = .true., do_adam = .true., do_mo = .true., &
                           do_rmsprop = .true., do_adagrad = .true., do_hj = .true., &
                           do_adadelta = .true., do_simann = .true., print_true = .true.
@@ -23,7 +26,7 @@ program xminimize
    "Easom", "Goldstein-Price", "Levy"]
     call cpu_time(tinit)
     nfunk_try = size(ifunk_try)
-do_ifunk: do jfunk=1, nfunk_try
+do_ifunk: do jfunk=1, nfunk_try ! loop over functions to optimize
     ifunk = ifunk_try(jfunk)
     print "(/,a)", "function: " // trim(func_names(ifunk))
     print "('#dimensions = ',i0, /)", ndim
@@ -35,6 +38,7 @@ do_ifunk: do jfunk=1, nfunk_try
        call cpu_time(t1)
        call luus_jaakola_min(funk, xx, r, niter_lj, alpha, min_point, min_value)
        call cpu_time(t2)
+       print "(/,a)", "Luus-Jaakola method"
        print *, "r: "            , r
        print *, "Minimum point: ", min_point
        print *, "Minimum value: ", min_value
