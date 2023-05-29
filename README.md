@@ -9,7 +9,7 @@ Works with gfortran 12.0.1 20220213 and ifort version 2021.6.0.
 
 ## Some ChatGPT-4 quirks
 
-When ChatGPT-4 generates code, it often forgets the `import` statement that is needed in the interface below.
+* When ChatGPT-4 generates code, it often forgets the `import` statement that is needed in the interface below.
 ```
     interface
         function funk(x)
@@ -19,12 +19,12 @@ When ChatGPT-4 generates code, it often forgets the `import` statement that is n
         end function funk
     end interface`
 ```
-It can produce code with `implicit none` and undeclared variables that does not compile. It tends to declare a variable `i` as integer even in a procedure that does not use the variable `i`.
+* It can produce code with `implicit none` and undeclared variables that does not compile. It tends to declare a variable `i` as integer even in a procedure that does not use the variable `i`.
 
-When ChatGPT-4 translated some algorithms from the literature with `g*g'` or equivalently `g*transpose(g)`, it erroneously translated this to `g**2` in Fortran instead of `sum(g**2)`.
+* When ChatGPT-4 translated some algorithms from the literature with `g*g'` or equivalently `g*transpose(g)`, it erroneously translated this to `g**2` in Fortran instead of `sum(g**2)`.
 
-ChatGPT-4 sometimes forgets that the `random_number()` intrinsic is a subroutine, not a function, so that you cannot write 
+* ChatGPT-4 sometimes forgets that the `random_number()` intrinsic is a subroutine, not a function, so that you cannot write 
 ```
 x = random_number()
 ```
-ChatGPT-4 sometimes declares as `intent(in)` an argument that needs to be `intent(in out)`, since its initial value in changed in the procedure.
+* ChatGPT-4 sometimes declares as `intent(in)` an argument that needs to be `intent(in out)`, since its initial value in changed in the procedure.
