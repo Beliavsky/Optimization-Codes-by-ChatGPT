@@ -10,7 +10,7 @@ Works with gfortran 12.0.1 20220213 and ifort version 2021.6.0.
 ## Some ChatGPT-4 quirks
 
 * When ChatGPT-4 generates code, it often forgets the `import` statement that is needed in the interface below.
-```
+```Fortran
     interface
         function funk(x)
             import :: dp
@@ -28,3 +28,30 @@ Works with gfortran 12.0.1 20220213 and ifort version 2021.6.0.
 x = random_number()
 ```
 * ChatGPT-4 sometimes declares as `intent(in)` an argument that needs to be `intent(in out)`, since its initial value in changed in the procedure.
+
+* ChatGPT-4 can incorrectly use a procedure argument in what is supposed to be a constant expression, as in
+
+```Fortran
+module sv_mod
+use kind_mod, only: dp
+use random_mod, only: random_normal
+implicit none
+contains
+subroutine ret(n, kappa, theta, eta, y, x)
+integer      , intent(in)    :: n
+real(kind=dp), intent(in)    :: kappa, theta, eta
+real(kind=dp), intent(out)   :: y(n), x(n)
+! for line below, gfortran says 'Error: Parameter 'n' at (1) has not been declared or is a variable, which does not reduce to a constant expression'
+real(kind=dp)                :: dt = 1.0_dp / n 
+integer                      :: i
+real(kind=dp)                :: dW, dV
+y(1) = theta
+do i=2,n
+   dW = sqrt(dt) * random_normal()
+   dV = sqrt(dt) * random_normal()
+   y(i) = y(i-1) + kappa * (theta - y(i-1)) * dt + eta * sqrt(max(0.0_dp, y(i-1))) * dV
+   x(i) = exp(y(i-1)) * dW
+end do
+end subroutine ret
+end module sv_mod
+```
